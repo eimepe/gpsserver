@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, shrink-to-fit=no, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Satelital Esspia</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Bootstrap Core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/simple-sidebar.css" rel="stylesheet">
+    <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="build/react.js"></script>
+    <script src="build/react-dom.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+<style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 500px;
+      }
+    </style>
+</head>
+
+<body>
+  <header id="nav"></header>
+
+    <div style="margin-top: 60px;" id="wrapper" >
+
+
+        <div id="sidebar-wrapper">
+
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row alert alert-success" >
+                  <div class="col-lg-3">
+                  <a href="#menu-toggle" class="btn btn-default" id="menu-toggle"><i class="material-icons">list</i></a>
+</div>
+<div class="col-lg-9">
+ <h4 style="margin-left: 20px;"  align="left">Dispositivo: <span id="title"></span></h4>
+</div>
+</div>
+                   <div id="map">Por Favor seleccione un dispositivo para ver su posicion</div>
+
+                   <div style="margin-top:2%;" id="nombre" class="alert-success"><img src="img/loading.gif"></div>
+
+
+
+
+   <script>
+
+
+
+
+    var marker;
+var myLatLng;
+function initMap() {
+
+  $.ajax({
+          dataType: 'json',
+              url: "http://190.84.233.79:9000/posiciones",
+              type: "GET",
+              xhrFields: {
+      withCredentials: true
+  },
+
+                 success: function(data)
+             {
+                 myLatLng  = {lat: data[0].latitud, lng: data[0].longitud};
+
+                       var distancia = calcularDistancia(data[0].latitud, data[1].latitud, data[0].longitud, data[1].longitud);
+                       console.log("Distancia"+distancia);
+               }
+            });
+
+
+
+
+  var contentString = '<div id="tabla" style="background:#0FE8AE; border: 1px solid #1FDBF9; border-radius:10px; margin-top:15px;">Cargando por favor Espere ...</div>';
+
+  var infowindow = new google.maps.InfoWindow({
+    content: contentString
+  });
+
+  var map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 16,
+    center: myLatLng
+  });
+
+
+      marker = new google.maps.Marker({
+
+        position:  myLatLng,
+        title: 'Posicion Actual',
+        draggable: true,
+        map: map,
+
+    });
+
+    marker.addListener('click', function() {
+    infowindow.open(map, marker);
+    addmarker();
+  });
+
+
+
+
+                   function calcularDistancia(lat1, lat2, lon1, lon2){
+                     rad = function(x) {return x*Math.PI/180;}
+                   var R = 6378.137; //Radio de la tierra en km
+                    var dLat = rad( lat2 - lat1 );
+                    var dLong = rad( lon2 - lon1 );
+                   var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLong/2) * Math.sin(dLong/2);
+                    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    var d = R * c;
+                   return d.toFixed(3); //Retorna tres decimales
+                   }
+
+
+
+  function addmarker() {
+
+
+$.ajax({
+        dataType: 'json',
+            url: "http://190.84.233.79:9000/posiciones/1",
+            type: "GET",
+            xhrFields: {
+    withCredentials: true
+},
+
+//console.log(data[0].latitud);
+
+               success: function(data)
+           {
+
+      //addMarker(data[0].latitude, data[0].longitude, "hola");
+      marker.setPosition(new google.maps.LatLng(data[0].latitud,data[0].longitud));
+      map.setCenter(new google.maps.LatLng(data[0].latitud,data[0].longitud))
+      console.log(data[0].latitud);
+
+      document.getElementById("nombre").innerHTML ='<table class="table table-striped"><tbody><thead><tr><td>Nombre</td><td>Ultima Actualizacion</td><td>latitud</td><td>longitud</td></tr></thead><tr><td>'+data[0].deviceid+'</td><td>'+new Date(data[0].fecha)+'</td><td>'+data[0].latitud+'</td><td>'+data[0].longitud+' </td><td>'+calcularDistancia(data[0].latitud, data[1].latitud, data[0].longitud, data[1].longitud)+' KM</td></tr></tbody></table>';
+
+document.getElementById("title").innerHTML =''+data[0].deviceid;
+
+document.getElementById("tabla").innerHTML ='<table class="table"><tbody><thead><tr><td>Nombre</td><td>Ultima Actualizacion</td><td>latitud</td><td>longitud</td><td>Distancia ultimas posiciones</td></tr></thead><tr><td>'+data[0].deviceid+'</td><td>'+new Date(data[0].fecha)+'</td><td>'+data[0].latitud+' </td><td>'+data[0].longitud+'</td><td>'+calcularDistancia(data[0].latitud, data[1].latitud, data[0].longitud, data[1].longitud)+' KM</td></tr></tbody></table>';
+
+           }
+        });
+
+
+
+
+}
+setInterval(function(){ addmarker(); }, 5000);
+
+}
+
+
+
+
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?signed_in=true&key=AIzaSyBGDdgrnM1m9UT3oehLCY8cRBItHYe3FTM&callback=initMap"></script>
+
+
+
+
+            </div>
+        </div>
+<!-- /#page-content-wrapper -->
+
+    </div>
+    <script>
+    $("#menu-toggle").click(function(e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("toggled");
+    });
+    </script>
+    <script src="src/device.js" type="text/babel"></script>
+    <script src="src/navbar.js" type="text/babel"></script>
+
+</body>
+
+</html>
